@@ -19,7 +19,11 @@ jobs:
           unzip -q MyVoiceGenerator_v2.zip -d /tmp/mvg
           cp -R /tmp/mvg/MyVoiceGenerator_v2/. .
 
-      - name: Set up Java 17
+      - name: Remove duplicate style resource
+        run: |
+          rm -f app/src/main/res/values/styles.xml
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -33,9 +37,6 @@ jobs:
           sdkmanager "platform-tools"
           sdkmanager "platforms;android-35"
           sdkmanager "build-tools;35.0.0"
-
-      - name: Accept Android licenses
-        run: |
           yes | sdkmanager --licenses || true
 
       - name: Set up Gradle
@@ -43,20 +44,14 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Check project files
+      - name: Check Android project
         run: |
-          echo "===== ROOT ====="
           ls -la
-          echo "===== APP ====="
           ls -la app
 
       - name: Build Debug APK
         run: |
           gradle assembleDebug --stacktrace
-
-      - name: Show APK location
-        run: |
-          ls -lh app/build/outputs/apk/debug/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
