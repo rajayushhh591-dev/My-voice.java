@@ -1,6 +1,9 @@
 name: Build MyVoiceGenerator APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -16,7 +19,7 @@ jobs:
           unzip -q MyVoiceGenerator_v2.zip -d /tmp/mvg
           cp -R /tmp/mvg/MyVoiceGenerator_v2/. .
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -24,27 +27,36 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools'
 
       - name: Install Android SDK packages
         run: |
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+
+      - name: Accept Android licenses
+        run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Check Android project
+      - name: Check project files
         run: |
+          echo "===== ROOT ====="
           ls -la
+          echo "===== APP ====="
           ls -la app
 
       - name: Build Debug APK
         run: |
           gradle assembleDebug --stacktrace
+
+      - name: Show APK location
+        run: |
+          ls -lh app/build/outputs/apk/debug/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
